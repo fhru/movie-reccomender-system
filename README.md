@@ -37,7 +37,7 @@ Dataset yang digunakan berisi informasi film dari berbagai genre, termasuk judul
 
 ### Fitur Dataset
 
-![image.png](https://i.postimg.cc/SKR6WGmT/image.png)
+![image.png](https://i.imgur.com/hrDLRlU.png)
 
 Berikut adalah deskripsi masing-masing fitur dalam dataset:
 
@@ -54,41 +54,29 @@ Berikut adalah deskripsi masing-masing fitur dalam dataset:
 | `vote_count`        | Integer       | Jumlah rating yang diberikan pengguna                                     |
 
 ### Missing & Duplicated Values
-![image.png](https://i.postimg.cc/Bb0Pw5GG/image.png)
+![image.png](https://i.imgur.com/PYUvabv.png)
 - Dataset tidak memiliki data yang duplikat.
 - Sebagian film tidak memiliki nilai `genre` atau `overview`.
-- Untuk menjaga cakupan data secara maksimal, nilai kosong diisi dengan **string kosong ('')** agar semua film tetap dapat direkomendasikan dalam sistem.
 
 ## Exploratory Data Analysis
 ### Distribusi Rating Film
-![image.png](https://i.postimg.cc/90Yw34Ww/image.png)
+![image.png](https://i.imgur.com/c6gkd9e.png)
 - Distribusi rating film menunjukkan puncak di sekitar 6.5 hingga 7.5, dengan mayoritas film memiliki rating di atas 6.0, mencerminkan dataset yang didominasi oleh film berkualitas tinggi.
 
 ### Genre Terpopuler
-![image.png](https://i.postimg.cc/9FcqdBpd/image.png)
+![image.png](https://i.imgur.com/907wKHW.png)
 
 ## Data Preparation
 
 Langkah-langkah yang dilakukan:
 
 1. **Mengisi nilai kosong** di kolom `overview` dan `genre` dengan string kosong (`''`) agar tidak kehilangan data.
-2. **Menggabungkan kolom `genre` dan `overview`** menjadi `combined_features` agar sistem mengenali tema dan deskripsi film secara bersamaan.
+2. **Menggabungkan Fitur**
+   - Fitur `genre` dan `overview` digabungkan menjadi satu kolom `combined_features`.
+   - Tujuannya agar representasi teks lebih kaya, mencakup tema dan ringkasan cerita film.
 3. **Penerapan TF-IDF Vectorizer**:
    - Stopwords dihapus agar hanya kata penting yang dihitung.
    - Menghasilkan matriks sparse dari kombinasi teks.
-4. **Perhitungan cosine similarity** antara film berdasarkan hasil TF-IDF.
-
-## Modeling
-
-Model yang digunakan dalam proyek ini adalah **Content-Based Filtering**, yaitu pendekatan yang merekomendasikan item berdasarkan kemiripan fitur kontennya. Dalam konteks ini, yang dibandingkan adalah **genre** dan **overview** dari masing-masing film.
-
-### Langkah-Langkah Modeling
-
-1. **Menggabungkan Fitur**
-   - Fitur `genre` dan `overview` digabungkan menjadi satu kolom `combined_features`.
-   - Tujuannya agar representasi teks lebih kaya, mencakup tema dan ringkasan cerita film.
-
-2. **TF-IDF Vectorization**
    - TF-IDF (**Term Frequency - Inverse Document Frequency**) adalah metode untuk mengubah teks menjadi vektor numerik.
    - Rumus dasar: 
     ![image.png](https://quicklatex.com/cache3/31/ql_def842c37ffe4b1b96c38e775602d131_l3.png)
@@ -102,7 +90,11 @@ Model yang digunakan dalam proyek ini adalah **Content-Based Filtering**, yaitu 
 
    - Kata-kata yang sering muncul di satu dokumen tapi jarang muncul di dokumen lain akan memiliki nilai TF-IDF tinggi, menandakan kata tersebut penting dalam dokumen tersebut.
 
-3. **Cosine Similarity**
+## Modeling
+
+Model yang digunakan dalam proyek ini adalah **Content-Based Filtering**, yaitu pendekatan yang merekomendasikan item berdasarkan kemiripan fitur kontennya. Dalam konteks ini, yang dibandingkan adalah **genre** dan **overview** dari masing-masing film.
+
+### Menggunakan Cosine Similarity
    - Setelah teks dikonversi ke vektor TF-IDF, digunakan **cosine similarity** untuk mengukur kemiripan antar film.
    - Cosine similarity mengukur sudut antara dua vektor dalam ruang berdimensi tinggi.
    - Rumus cosine similarity:
@@ -116,77 +108,32 @@ Model yang digunakan dalam proyek ini adalah **Content-Based Filtering**, yaitu 
      - 1 artinya vektor identik (film sangat mirip).
      - 0 artinya tidak ada kemiripan.
 
-4. **Rekomendasi Film**
-   - Dihitung skor kemiripan antara satu film dengan semua film lain.
-   - Diambil **10 film dengan skor tertinggi** (selain dirinya sendiri) sebagai rekomendasi.
+### Rekomendasi Film
+- Dihitung skor kemiripan antara satu film dengan semua film lain.
+- Diambil **10 film dengan skor tertinggi** (selain dirinya sendiri) sebagai rekomendasi.
 
 ### Contoh Output Rekomendasi:
-![image.png](https://i.postimg.cc/Cx1BtL9d/image.png)
+![image.png](https://i.imgur.com/COEXxbP.png)
 
 ## Evaluation
 
-Sistem rekomendasi ini menggunakan pendekatan **content-based filtering** yang memanfaatkan kombinasi fitur teks dari `genre` dan `overview` film. Evaluasi dilakukan secara kualitatif berdasarkan relevansi rekomendasi terhadap film acuan.
+Evaluasi dilakukan menggunakan metrik **Precision@K**, yaitu proporsi film relevan di antara *K* rekomendasi teratas yang diberikan oleh sistem. Dalam konteks ini, kita ingin mengetahui seberapa banyak dari 10 film yang direkomendasikan benar-benar mirip atau relevan dengan film input menurut data ground truth atau anotasi manual.
 
-![image.png](https://i.postimg.cc/Vvdppt9D/image.png)
+### Langkah-langkah Evaluasi dengan Precision@10:
 
-Sebagai contoh, sistem memberikan 10 rekomendasi film yang mirip dengan *Midsommar* (genre: Horror, Drama, Mystery). Hasil rekomendasi menunjukkan bahwa mayoritas film memiliki genre yang serupa.
+1. **Pilih beberapa film sebagai titik uji** (misalnya: `Midsommar`, `RoboCop`, `Parasite`).
+2. Untuk setiap film tersebut:
+   - Gunakan model untuk menghasilkan 10 rekomendasi film teratas.
+   - Bandingkan hasil rekomendasi tersebut dengan daftar film yang dianggap relevan secara manual atau dari sumber referensi eksternal.
+3. Hitung **Precision@10** untuk setiap film menggunakan rumus:
 
-# Penghitungan Presisi Model Rekomendasi
+    ![image.png](https://quicklatex.com/cache3/fe/ql_7b9b5356ff65abbda0f1ba37a04ffffe_l3.png)
 
-Untuk menghitung **presisi** model rekomendasi yang dibuat, kita perlu menentukan seberapa banyak rekomendasi yang relevan dibandingkan dengan total rekomendasi yang diberikan.
+### Hasil Evaluasi Precision@10:
 
-## Langkah-langkah Menghitung Presisi
+![image.png](https://i.imgur.com/nL8JbDk.png)
 
-1. **Menentukan Relevansi**  
-   Sebuah film dianggap relevan jika genrenya memiliki setidaknya satu genre yang sama dengan film input, yaitu *Midsommar* (**Horror, Drama, Mystery**). Ini adalah pendekatan umum dalam sistem rekomendasi berbasis genre.
+### Analisis:
+- Model memiliki kemampuan generalisasi yang baik untuk film dari berbagai genre.
+- Precision tinggi (≥ 0.90) menunjukkan sistem mampu merekomendasikan film yang sesuai preferensi atau tema film input.
 
-2. **Menghitung Rekomendasi yang Relevan**  
-   Kita periksa genre setiap film yang direkomendasikan dan bandingkan dengan genre *Midsommar* (**Horror, Drama, atau Mystery**).
-
-3. **Menghitung Presisi**  
-   Presisi dihitung dengan rumus:
-
-   ![iamge.png](https://quicklatex.com/cache3/e2/ql_6d2af2d532d10ea2a6bfa329bfb15ce2_l3.png)
-
-## Data Input
-
-- **Genre Midsommar**: Horror, Drama, Mystery  
-- **Rekomendasi (10 film)**:
-
-  1. *The Experiment*: Thriller, Drama (**mengandung Drama**)
-  2. *He's Out There*: Horror, Thriller (**mengandung Horror**)
-  3. *No One Gets Out Alive*: Horror, Thriller, Mystery (**mengandung Horror, Mystery**)
-  4. *A Christmas Horror Story*: Horror, Fantasy (**mengandung Horror**)
-  5. *Aftermath*: Horror, Crime, Drama, Thriller (**mengandung Horror, Drama**)
-  6. *The Crazies*: Mystery, Horror, Action (**mengandung Horror, Mystery**)
-  7. *Don't Hang Up*: Horror, Thriller (**mengandung Horror**)
-  8. *Munna Bhai M.B.B.S.*: Comedy, Drama (**mengandung Drama**)
-  9. *The Children*: Horror, Mystery, Thriller (**mengandung Horror, Mystery**)
-  10. *The Visit*: Horror, Thriller, Mystery (**mengandung Horror, Mystery**)
-
-## Analisis
-
-- **Total rekomendasi**: 10 film  
-- **Rekomendasi yang relevan**: Kita cek apakah setiap film memiliki setidaknya satu genre yang cocok dengan *Midsommar*:
-
-  - *The Experiment*: ✅ Relevan (ada Drama)
-  - *He's Out There*: ✅ Relevan (ada Horror)
-  - *No One Gets Out Alive*: ✅ Relevan (ada Horror, Mystery)
-  - *A Christmas Horror Story*: ✅ Relevan (ada Horror)
-  - *Aftermath*: ✅ Relevan (ada Horror, Drama)
-  - *The Crazies*: ✅ Relevan (ada Horror, Mystery)
-  - *Don't Hang Up*: ✅ Relevan (ada Horror)
-  - *Munna Bhai M.B.B.S.*: ✅ Relevan (ada Drama)
-  - *The Children*: ✅ Relevan (ada Horror, Mystery)
-  - *The Visit*: ✅ Relevan (ada Horror, Mystery)
-
-Semua **10 film** yang direkomendasikan memiliki **setidaknya satu genre** (Horror, Drama, atau Mystery) yang cocok dengan Midsommar. Jadi, semua rekomendasi dianggap relevan.
-
-## Perhitungan Presisi
-
-![iamge.png](https://quicklatex.com/cache3/35/ql_780aa16aff341502991d119d38793535_l3.png)
-
-## Hasil Akhir
-
-Presisi dari model rekomendasi yang dibuat adalah **1.0** atau **100%**.  
-Artinya, semua film yang direkomendasikan relevan dengan genre *Midsommar*.
